@@ -1,44 +1,38 @@
 <template>
-  <q-layout view="lHh Lpr lFf">
+  <q-layout view="hHh lpR fFf">
     <q-header elevated>
-      <q-toolbar>
+      <q-toolbar class="q-px-md">
+        <q-toolbar-title>Конвертер валют</q-toolbar-title>
         <q-btn
-          flat
           dense
-          round
-          icon="menu"
-          aria-label="Menu"
-          @click="toggleLeftDrawer"
+          flat
+          label="Главная"
+          padding="4px 10px"
+          class="mr-4"
+          :color="route.fullPath === '/' ? 'info' : 'white'"
+          @click="router.push('/')"
         />
-
-        <q-toolbar-title>
-          Quasar App
-        </q-toolbar-title>
-
-        <div>Quasar v{{ $q.version }}</div>
+        <q-btn
+          dense
+          flat
+          label="Конвертация"
+          class="mr-8"
+          padding="4px 10px"
+          :color="route.fullPath === '/convert' ? 'info' : 'white'"
+          @click="router.push('/convert')"
+        />
+        <q-select
+          v-model="selectedCurrency"
+          :options="Object.values(MainCurrencies)"
+          label="Основная валюта"
+          label-color="white"
+          class="w-40 title-select"
+          hide-bottom-space
+          dropdown-icon="keyboard_arrow_down"
+          @update:modelValue="updateBaseCurrency"
+        />
       </q-toolbar>
     </q-header>
-
-    <q-drawer
-      v-model="leftDrawerOpen"
-      show-if-above
-      bordered
-    >
-      <q-list>
-        <q-item-label
-          header
-        >
-          Essential Links
-        </q-item-label>
-
-        <EssentialLink
-          v-for="link in linksList"
-          :key="link.title"
-          v-bind="link"
-        />
-      </q-list>
-    </q-drawer>
-
     <q-page-container>
       <router-view />
     </q-page-container>
@@ -46,61 +40,38 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
-import EssentialLink, { EssentialLinkProps } from 'components/EssentialLink.vue';
+import { ref, watch } from 'vue';
+import { storeToRefs } from 'pinia';
+import { MainCurrencies, useBaseCurrencyStore } from 'src/stores/store';
+import { useRouter, useRoute } from 'vue-router';
 
-defineOptions({
-  name: 'MainLayout'
-});
+const router = useRouter();
 
-const linksList: EssentialLinkProps[] = [
-  {
-    title: 'Docs',
-    caption: 'quasar.dev',
-    icon: 'school',
-    link: 'https://quasar.dev'
-  },
-  {
-    title: 'Github',
-    caption: 'github.com/quasarframework',
-    icon: 'code',
-    link: 'https://github.com/quasarframework'
-  },
-  {
-    title: 'Discord Chat Channel',
-    caption: 'chat.quasar.dev',
-    icon: 'chat',
-    link: 'https://chat.quasar.dev'
-  },
-  {
-    title: 'Forum',
-    caption: 'forum.quasar.dev',
-    icon: 'record_voice_over',
-    link: 'https://forum.quasar.dev'
-  },
-  {
-    title: 'Twitter',
-    caption: '@quasarframework',
-    icon: 'rss_feed',
-    link: 'https://twitter.quasar.dev'
-  },
-  {
-    title: 'Facebook',
-    caption: '@QuasarFramework',
-    icon: 'public',
-    link: 'https://facebook.quasar.dev'
-  },
-  {
-    title: 'Quasar Awesome',
-    caption: 'Community Quasar projects',
-    icon: 'favorite',
-    link: 'https://awesome.quasar.dev'
+const route = useRoute();
+
+const baseCurrencyStore = useBaseCurrencyStore();
+
+const { getBaseCurrency } = storeToRefs(baseCurrencyStore);
+
+const selectedCurrency = ref(getBaseCurrency.value);
+
+const updateBaseCurrency = (value: MainCurrencies) => {
+  selectedCurrency.value = value;
+  baseCurrencyStore.changeBaseCurrency(value);
+};
+
+watch(
+  () => getBaseCurrency.value,
+  () => {
+    selectedCurrency.value = getBaseCurrency.value;
   }
-];
-
-const leftDrawerOpen = ref(false);
-
-function toggleLeftDrawer () {
-  leftDrawerOpen.value = !leftDrawerOpen.value;
-}
+);
 </script>
+
+<style lang="sass">
+.title-select .q-field__native span
+  color: white
+
+.title-select .q-select__dropdown-icon
+  color: white
+</style>
